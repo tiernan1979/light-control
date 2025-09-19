@@ -116,7 +116,7 @@ class LightControlCard extends LitElement {
                           ></div>
                         ` : ''}
                       </div>
-                    ` : ''}
+                    ` : ''})
                   })}
                 </div>
               ` : ''}
