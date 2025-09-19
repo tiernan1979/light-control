@@ -28,96 +28,124 @@ class LightControlCard extends LitElement {
   }
 
   render() {
-    if (!this.hass || !this.config) return html``;
-
     return html`
       <ha-card>
-        ${this.config.scenes.length > 0 ? html`
-          <div class="button-container">
-            ${this.config.scenes.map(scene => html`
-              <button
-                class="scene-button"
-                @click=${() => this._activateScene(scene.entity)}
-              >
-                ${scene.icon ? html`<ha-icon icon="${scene.icon}"></ha-icon>` : ''}
-                ${scene.name || this._friendlyName(scene.entity)}
-              </button>
-            `)}
-          </div>
-        ` : ''}
-
+        ${this.config.scenes.length > 0
+          ? html`
+              <div class="button-container">
+                ${this.config.scenes.map(
+                  (scene) => html`
+                    <button
+                      class="scene-button"
+                      @click=${() => this._activateScene(scene.entity)}
+                    >
+                      ${scene.icon
+                        ? html`<ha-icon icon="${scene.icon}"></ha-icon>`
+                        : ''}
+                      ${scene.name ||
+                      this._friendlyName(scene.entity)}
+                    </button>
+                  `
+                )}
+              </div>
+            `
+          : ''}
         <div class="group-container">
           ${this.config.groups.map((group, index) => {
-            const groupState = this.hass.states?.[group.group_entity];
+            const groupState = this.hass.states[group.group_entity];
             const isExpanded = this.expandedGroups[index] || false;
-
             return html`
               <div class="group-header" @click=${() => this._toggleGroup(index)}>
                 <ha-icon icon="mdi:lightbulb-group"></ha-icon>
                 <span>${group.name}</span>
-                <ha-icon icon=${isExpanded ? 'mdi:chevron-up' : 'mdi:chevron-down'}></ha-icon>
+                <ha-icon
+                  icon=${isExpanded ? 'mdi:chevron-up' : 'mdi:chevron-down'}
+                ></ha-icon>
               </div>
-
-              ${groupState ? html`
-                <div class="group-controls">
-                  <div class="slider-container">
-                    <input
-                      type="range"
-                      class="custom-slider"
-                      .value=${this._brightnessValue(groupState)}
-                      @click=${() => this._toggleSlider(group.group_entity, groupState.state)}
-                      @input=${(ev) => this._setBrightness(group.group_entity, ev.target.value)}
-                      min="0"
-                      max="100"
-                      step="1"
-                    >
-                  </div>
-
-                  ${groupState.attributes?.supported_color_modes?.includes('rgb') ? html`
-                    <div
-                      class="color-indicator"
-                      style="background-color: ${this._rgbColor(groupState.attributes.rgb_color)}"
-                      @dblclick=${() => this._openColorPicker(group.group_entity, groupState.attributes.rgb_color || [255, 255, 255])}
-                    ></div>
-                  ` : ''}
-                </div>
-              ` : ''}
-
-              ${isExpanded ? html`
-                <div class="light-list">
-                  ${group.lights.map(light => {
-                    const lightState = this.hass.states?.[light.entity];
-                    return lightState ? html`
-                      <div class="light-item">
-                        <span>${light.name || this._friendlyName(light.entity)}</span>
-                        <div class="slider-container">
-                          <input
-                            type="range"
-                            class="custom-slider"
-                            .value=${this._brightnessValue(lightState)}
-                            @click=${() => this._toggleSlider(light.entity, lightState.state)}
-                            @input=${(ev) => this._setBrightness(light.entity, ev.target.value)}
-                            min="0"
-                            max="100"
-                            step="1"
-                          >
-                        </div>
-                    
-                        ${lightState.attributes?.supported_color_modes?.includes('rgb') ? html`
-                          <div
-                            class="color-indicator"
-                            .style=${`background-color: ${this._rgbColor(lightState.attributes.rgb_color)}`}
-                            @dblclick=${() => this._openColorPicker(light.entity, lightState.attributes.rgb_color || [255, 255, 255])}
-                          ></div>
-                        ` : ''}
+              ${groupState
+                ? html`
+                    <div class="group-controls">
+                      <div class="slider-container">
+                        <input
+                          type="range"
+                          class="custom-slider"
+                          .value=${this._brightnessValue(groupState)}
+                          @click=${() =>
+                            this._toggleSlider(group.group_entity, groupState.state)}
+                          @input=${(ev) =>
+                            this._setBrightness(group.group_entity, ev.target.value)}
+                          min="0"
+                          max="100"
+                          step="1"
+                        />
                       </div>
-                    ` : '';
-
-                      </div>
-                    ` : ''}
-                  })}
-                </div>
-              ` : ''}
+                      ${groupState.attributes.supported_color_modes?.includes('rgb')
+                        ? html`
+                            <div
+                              class="color-indicator"
+                              .style=${`background-color: ${this._rgbColor(
+                                groupState.attributes.rgb_color
+                              )}`}
+                              @dblclick=${() =>
+                                this._openColorPicker(
+                                  group.group_entity,
+                                  groupState.attributes.rgb_color || [255, 255, 255]
+                                )}
+                            ></div>
+                          `
+                        : ''}
+                    </div>
+                  `
+                : ''}
+              ${isExpanded
+                ? html`
+                    <div class="light-list">
+                      ${group.lights.map((light) => {
+                        const lightState = this.hass.states[light.entity];
+                        return lightState
+                          ? html`
+                              <div class="light-item">
+                                <span>
+                                  ${light.name || this._friendlyName(light.entity)}
+                                </span>
+                                <div class="slider-container">
+                                  <input
+                                    type="range"
+                                    class="custom-slider"
+                                    .value=${this._brightnessValue(lightState)}
+                                    @click=${() =>
+                                      this._toggleSlider(light.entity, lightState.state)}
+                                    @input=${(ev) =>
+                                      this._setBrightness(light.entity, ev.target.value)}
+                                    min="0"
+                                    max="100"
+                                    step="1"
+                                  />
+                                </div>
+                                ${lightState.attributes.supported_color_modes?.includes(
+                                  'rgb'
+                                )
+                                  ? html`
+                                      <div
+                                        class="color-indicator"
+                                        .style=${`background-color: ${this._rgbColor(
+                                          lightState.attributes.rgb_color
+                                        )}`}
+                                        @dblclick=${() =>
+                                          this._openColorPicker(
+                                            light.entity,
+                                            lightState.attributes.rgb_color || [255, 255, 255]
+                                          )}
+                                      ></div>
+                                    `
+                                  : ''}
+                              </div>
+                            `
+                          : '';
+                      })}
+                    </div>
+                  `
+                : ''}
             `;
           })}
         </div>
@@ -125,26 +153,10 @@ class LightControlCard extends LitElement {
     `;
   }
 
-  // === Helper Methods ===
-
-  _friendlyName(entityId) {
-    return entityId?.split('.')[1]?.replace(/_/g, ' ') || entityId;
-  }
-
-  _brightnessValue(state) {
-    return state.state === 'on' ? Math.round((state.attributes.brightness || 0) / 2.55) : 0;
-  }
-
-  _rgbColor(rgb) {
-    return Array.isArray(rgb) ? `rgb(${rgb.join(',')})` : '#ffffff';
-  }
-
-  // === Event Handlers ===
-
   _toggleGroup(index) {
     this.expandedGroups = {
       ...this.expandedGroups,
-      [index]: !this.expandedGroups[index]
+      [index]: !this.expandedGroups[index],
     };
     this.requestUpdate();
   }
@@ -159,33 +171,51 @@ class LightControlCard extends LitElement {
     if (value > 0) {
       this.hass.callService('light', 'turn_on', {
         entity_id: entity,
-        brightness_pct: Number(value),
+        brightness_pct: value,
       });
     } else {
-      this.hass.callService('light', 'turn_off', {
-        entity_id: entity,
-      });
+      this.hass.callService('light', 'turn_off', { entity_id: entity });
     }
   }
 
   _openColorPicker(entity, rgbColor) {
-    this.dispatchEvent(new CustomEvent('hass-more-info', {
+    const event = new CustomEvent('hass-more-info', {
       bubbles: true,
       composed: true,
       detail: { entityId: entity },
-    }));
-
+    });
+    this.dispatchEvent(event);
+    // Scroll to top to show color picker
     setTimeout(() => {
-      const moreInfo = document.querySelector('home-assistant')?.shadowRoot?.querySelector('ha-more-info-dialog');
-      const dialog = moreInfo?.shadowRoot?.querySelector('ha-dialog');
-      if (dialog) dialog.scrollTop = 0;
+      const moreInfo = document
+        .querySelector('home-assistant')
+        ?.shadowRoot?.querySelector('ha-more-info-dialog');
+      if (moreInfo) {
+        moreInfo.shadowRoot.querySelector('ha-dialog').scrollTop = 0;
+      }
     }, 100);
   }
 
   _activateScene(entity) {
-    this.hass.callService('scene', 'turn_on', {
-      entity_id: entity,
-    });
+    this.hass.callService('scene', 'turn_on', { entity_id: entity });
+  }
+
+  _friendlyName(entity) {
+    return entity.split('.')[1].replace(/_/g, ' ');
+  }
+
+  _brightnessValue(stateObj) {
+    if (stateObj.state === 'on' && stateObj.attributes.brightness !== undefined) {
+      return Math.round(stateObj.attributes.brightness / 2.55);
+    }
+    return 0;
+  }
+
+  _rgbColor(rgb) {
+    if (!rgb || !Array.isArray(rgb) || rgb.length < 3) {
+      return '#ffffff';
+    }
+    return `rgb(${rgb[0]}, ${rgb[1]}, ${rgb[2]})`;
   }
 
   static get styles() {
@@ -257,12 +287,25 @@ class LightControlCard extends LitElement {
         width: 100%;
         height: 8px;
         border-radius: 4px;
-        background: linear-gradient(to right, var(--primary-color) 0%, var(--primary-color) 100%);
+        background: linear-gradient(
+          to right,
+          var(--primary-color) 0%,
+          var(--primary-color) 100%
+        );
         -webkit-appearance: none;
         outline: none;
         cursor: pointer;
       }
-      .custom-slider::-webkit-slider-thumb,
+      .custom-slider::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        background: white;
+        border: 2px solid var(--primary-color);
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        cursor: pointer;
+      }
       .custom-slider::-moz-range-thumb {
         width: 20px;
         height: 20px;
