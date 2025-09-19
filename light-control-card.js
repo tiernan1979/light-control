@@ -23,11 +23,13 @@ class LightControlCard extends LitElement {
     }
     this.config = {
       ...config,
-      scenes: config.scenes || [], // Default to empty array if scenes not provided
+      scenes: config.scenes || [],
     };
   }
 
   render() {
+    if (!this.hass || !this.config) return html``;
+
     return html`
       <ha-card>
         ${this.config.scenes.length > 0 ? html`
@@ -38,7 +40,7 @@ class LightControlCard extends LitElement {
                 @click=${() => this._activateScene(scene.entity)}
               >
                 ${scene.icon ? html`<ha-icon icon="${scene.icon}"></ha-icon>` : ''}
-                ${scene.name || scene.entity.split('.')[1].replace(/_/g, ' ')}
+                ${scene.name || this._friendlyName(scene.entity)}
               </button>
             `)}
           </div>
@@ -46,21 +48,23 @@ class LightControlCard extends LitElement {
 
         <div class="group-container">
           ${this.config.groups.map((group, index) => {
-            const groupState = this.hass.states[group.group_entity];
+            const groupState = this.hass.states?.[group.group_entity];
             const isExpanded = this.expandedGroups[index] || false;
+
             return html`
               <div class="group-header" @click=${() => this._toggleGroup(index)}>
                 <ha-icon icon="mdi:lightbulb-group"></ha-icon>
                 <span>${group.name}</span>
                 <ha-icon icon=${isExpanded ? 'mdi:chevron-up' : 'mdi:chevron-down'}></ha-icon>
               </div>
+
               ${groupState ? html`
                 <div class="group-controls">
                   <div class="slider-container">
                     <input
                       type="range"
                       class="custom-slider"
-                      .value=${groupState.state === 'on' ? Math.round((groupState.attributes.brightness || 0) / 2.55) : 0}
+                      .value=${this._brightnessValue(groupState)}
                       @click=${() => this._toggleSlider(group.group_entity, groupState.state)}
                       @input=${(ev) => this._setBrightness(group.group_entity, ev.target.value)}
                       min="0"
@@ -68,27 +72,29 @@ class LightControlCard extends LitElement {
                       step="1"
                     >
                   </div>
-                  ${groupState.attributes.supported_color_modes?.includes('rgb') ? html`
+
+                  ${groupState.attributes?.supported_color_modes?.includes('rgb') ? html`
                     <div
                       class="color-indicator"
-                      style=${`background-color: ${groupState.attributes.rgb_color ? `rgb(${groupState.attributes.rgb_color.join(',')})` : '#ffffff'}`}
+                      style="background-color: ${this._rgbColor(groupState.attributes.rgb_color)}"
                       @dblclick=${() => this._openColorPicker(group.group_entity, groupState.attributes.rgb_color || [255, 255, 255])}
                     ></div>
                   ` : ''}
                 </div>
               ` : ''}
+
               ${isExpanded ? html`
                 <div class="light-list">
                   ${group.lights.map(light => {
-                    const lightState = this.hass.states[light.entity];
+                    const lightState = this.hass.states?.[light.entity];
                     return lightState ? html`
                       <div class="light-item">
-                        <span>${light.name || light.entity.split('.')[1].replace(/_/g, ' ')}</span>
+                        <span>${light.name || this._friendlyName(light.entity)}</span>
                         <div class="slider-container">
                           <input
                             type="range"
                             class="custom-slider"
-                            .value=${lightState.state === 'on' ? Math.round((lightState.attributes.brightness || 0) / 2.55) : 0}
+                            .value=${this._brightnessValue(lightState)}
                             @click=${() => this._toggleSlider(light.entity, lightState.state)}
                             @input=${(ev) => this._setBrightness(light.entity, ev.target.value)}
                             min="0"
@@ -96,15 +102,16 @@ class LightControlCard extends LitElement {
                             step="1"
                           >
                         </div>
-                        ${lightState.attributes.supported_color_modes?.includes('rgb') ? html`
+
+                        ${lightState.attributes?.supported_color_modes?.includes('rgb') ? html`
                           <div
                             class="color-indicator"
-                            style=${`background-color: ${lightState.attributes.rgb_color ? `rgb(${lightState.attributes.rgb_color.join(',')})` : '#ffffff'}`}
+                            style="background-color: ${this._rgbColor(lightState.attributes.rgb_color)}"
                             @dblclick=${() => this._openColorPicker(light.entity, lightState.attributes.rgb_color || [255, 255, 255])}
                           ></div>
                         ` : ''}
                       </div>
-                    ` : ''}
+                    ` : '' }
                   })}
                 </div>
               ` : ''}
@@ -115,41 +122,65 @@ class LightControlCard extends LitElement {
     `;
   }
 
+  _friendlyName(entityId) {
+    return entityId?.split('.')[1]?.replace(/_/g, ' ') || entityId;
+  }
+
+  _brightnessValue(state) {
+    return state.state === 'on' ? Math.round((state.attributes.brightness || 0) / 2.55) : 0;
+  }
+
+  _rgbColor(rgb) {
+    return rgb ? `rgb(${rgb.join(',')})` : '#ffffff';
+  }
+
   _toggleGroup(index) {
-    this.expandedGroups = { ...this.expandedGroups, [index]: !this.expandedGroups[index] };
+    this.expandedGroups = {
+      ...this.expandedGroups,
+      [index]: !this.expandedGroups[index]
+    };
     this.requestUpdate();
   }
 
   _toggleSlider(entity, state) {
-    this.hass.callService('light', state === 'on' ? 'turn_off' : 'turn_on', { entity_id: entity });
+    this.hass.callService('light', state === 'on' ? 'turn_off' : 'turn_on', {
+      entity_id: entity,
+    });
   }
 
   _setBrightness(entity, value) {
     if (value > 0) {
-      this.hass.callService('light', 'turn_on', { entity_id: entity, brightness_pct: value });
+      this.hass.callService('light', 'turn_on', {
+        entity_id: entity,
+        brightness_pct: Number(value),
+      });
     } else {
-      this.hass.callService('light', 'turn_off', { entity_id: entity });
+      this.hass.callService('light', 'turn_off', {
+        entity_id: entity,
+      });
     }
   }
 
   _openColorPicker(entity, rgbColor) {
-    const event = new CustomEvent('hass-more-info', {
+    this.dispatchEvent(new CustomEvent('hass-more-info', {
       bubbles: true,
       composed: true,
       detail: { entityId: entity },
-    });
-    this.dispatchEvent(event);
-    // Ensure color picker is visible in more-info dialog
+    }));
+
     setTimeout(() => {
       const moreInfo = document.querySelector('home-assistant')?.shadowRoot?.querySelector('ha-more-info-dialog');
       if (moreInfo) {
-        moreInfo.shadowRoot.querySelector('ha-dialog').scrollTop = 0;
+        const dialog = moreInfo.shadowRoot?.querySelector('ha-dialog');
+        if (dialog) dialog.scrollTop = 0;
       }
     }, 100);
   }
 
   _activateScene(entity) {
-    this.hass.callService('scene', 'turn_on', { entity_id: entity });
+    this.hass.callService('scene', 'turn_on', {
+      entity_id: entity,
+    });
   }
 
   static get styles() {
@@ -226,16 +257,7 @@ class LightControlCard extends LitElement {
         outline: none;
         cursor: pointer;
       }
-      .custom-slider::-webkit-slider-thumb {
-        -webkit-appearance: none;
-        width: 20px;
-        height: 20px;
-        border-radius: 50%;
-        background: white;
-        border: 2px solid var(--primary-color);
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-        cursor: pointer;
-      }
+      .custom-slider::-webkit-slider-thumb,
       .custom-slider::-moz-range-thumb {
         width: 20px;
         height: 20px;
