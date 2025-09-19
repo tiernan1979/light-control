@@ -1,52 +1,57 @@
-Lovelace Light Control Card
-A modern, customizable Lovelace card for Home Assistant to control lights, light groups, and scenes. Features include brightness sliders, color pickers for RGB-capable lights, LIFX effect/theme support, and collapsible group layouts. Designed for visual editing in Home Assistant's Lovelace UI and distributed via Git for easy HACS integration.
-Features
+# Lovelace Light Control Card
 
-Scenes: Clickable chip buttons for quick scene activation.
-Light Groups: Collapsible sections with group-level toggle, brightness slider, and color picker (if supported).
-Individual Lights: Toggle, brightness slider, color picker (if supported), and LIFX-specific effect/theme dropdown.
-Styling: Trendy, clean design using Home Assistant theme variables.
-Editable: Configurable via Lovelace YAML or Home Assistant's visual editor.
+A modern, customizable Lovelace card for Home Assistant to control lights, light groups, and scenes. It features brightness sliders, color pickers for RGB-capable lights, LIFX effect/theme support, and collapsible group layouts. Designed for visual editing in Home Assistant's Lovelace UI and distributed via Git for seamless HACS integration.
 
-Installation
-Prerequisites
+## Features
 
-Home Assistant 2023.10.0 or later.
-HACS installed for custom component management.
-Lovelace UI configured in Home Assistant.
+- **Scenes**: Clickable chip buttons for quick scene activation.
+- **Light Groups**: Collapsible sections with group-level toggle, brightness slider, and color picker (if supported).
+- **Individual Lights**: Toggle, brightness slider, color picker (if supported), and LIFX-specific effect/theme dropdown.
+- **Styling**: Trendy, clean design using Home Assistant theme variables.
+- **Editable**: Configurable via Lovelace YAML or Home Assistant's visual editor.
 
-Install via HACS
+## Installation
 
-Open HACS in Home Assistant.
-Go to Frontend > Click + Explore & Download Repositories.
-Add a custom repository:
-URL: https://github.com/yourusername/lovelace-light-control-card
-Category: Lovelace
+### Prerequisites
 
+- Home Assistant 2023.10.0 or later.
+- [HACS](https://hacs.xyz/) installed for custom component management.
+- Lovelace UI configured in Home Assistant.
 
-Search for Lovelace Light Control Card and click Download.
-Restart Home Assistant after installation.
+### Install via HACS
 
-Manual Installation
+1. Open HACS in Home Assistant.
+2. Navigate to **Frontend** > Click **+ Explore & Download Repositories**.
+3. Add a custom repository:
+   - URL: `https://github.com/yourusername/lovelace-light-control-card`
+   - Category: **Lovelace**
+4. Search for **Lovelace Light Control Card** and click **Download**.
+5. Restart Home Assistant.
 
-Clone or download the repository:git clone https://github.com/yourusername/lovelace-light-control-card.git
+### Manual Installation
 
+1. Clone or download the repository:
 
-Copy light-control-card.js to <config>/www/light-control-card.js.
-Add the resource to Lovelace:
-Go to Configuration > Lovelace Dashboards > Resources > Add Resource.
-Set:
-URL: /local/light-control-card.js
-Type: module
+   ```bash
+   git clone https://github.com/yourusername/lovelace-light-control-card.git
+   ```
 
+2. Copy `light-control-card.js` to `<config>/www/light-control-card.js`.
+3. Add the resource to Lovelace:
 
-Save.
+   - Go to **Configuration** > **Lovelace Dashboards** > **Resources** > **Add Resource**.
+   - Set:
+     - **URL**: `/local/light-control-card.js`
+     - **Type**: `module`
+   - Save.
 
+4. Restart Home Assistant.
 
-Restart Home Assistant.
+## Configuration
 
-Configuration
-Add the card to your Lovelace dashboard via YAML or the visual editor. Example YAML:
+Add the card to your Lovelace dashboard via YAML or the visual editor. Example configuration:
+
+```yaml
 type: custom:light-control-card
 groups:
   - name: Living Room
@@ -73,86 +78,34 @@ scenes:
   - entity: scene.movie_night
     name: Movie Night
     icon: mdi:filmstrip
+```
 
-Configuration Options
+### Configuration Options
 
+| Key | Description | Type | Required |
+|-----|-------------|------|----------|
+| `groups` | List of light groups | Array | Yes |
+| `groups[].name` | Display name for the group | String | Yes |
+| `groups[].group_entity` | Light group entity ID (e.g., `light.living_room_group`) | String | Yes |
+| `groups[].lights` | List of individual lights | Array | Yes |
+| `groups[].lights[].entity` | Light entity ID (e.g., `light.lifx1`) | String | Yes |
+| `groups[].lights[].name` | Optional display name for the light | String | No |
+| `scenes` | List of scenes | Array | Yes |
+| `scenes[].entity` | Scene entity ID (e.g., `scene.relax`) | String | Yes |
+| `scenes[].name` | Optional display name for the scene | String | No |
+| `scenes[].icon` | Optional Material Design Icon (e.g., `mdi:sofa`) | String | No |
 
+### Visual Editor
 
-Key
-Description
-Type
-Required
+1. Add the card in Lovelace UI: Select **Custom: Light Control Card**.
+2. Edit the YAML directly or use the visual editor to adjust groups and scenes.
+3. Save and reposition as needed.
 
+## Styling
 
+The card uses Home Assistant theme variables for a modern look. Customize with `card-mod` (requires the `card-mod` component):
 
-groups
-List of light groups
-Array
-Yes
-
-
-groups[].name
-Display name for the group
-String
-Yes
-
-
-groups[].group_entity
-Light group entity ID (e.g., light.living_room_group)
-String
-Yes
-
-
-groups[].lights
-List of individual lights
-Array
-Yes
-
-
-groups[].lights[].entity
-Light entity ID (e.g., light.lifx1)
-String
-Yes
-
-
-groups[].lights[].name
-Optional display name for the light
-String
-No
-
-
-scenes
-List of scenes
-Array
-Yes
-
-
-scenes[].entity
-Scene entity ID (e.g., scene.relax)
-String
-Yes
-
-
-scenes[].name
-Optional display name for the scene
-String
-No
-
-
-scenes[].icon
-Optional Material Design Icon (e.g., mdi:sofa)
-String
-No
-
-
-Visual Editor
-
-Add the card in Lovelace UI: Select Custom: Light Control Card.
-Edit the YAML directly or use the visual editor to adjust groups and scenes.
-Save and reposition as needed.
-
-Styling
-The card uses Home Assistant theme variables for a modern look. Customize with card-mod (requires the card-mod component):
+```yaml
 type: custom:light-control-card
 card_mod:
   style: |
@@ -160,39 +113,57 @@ card_mod:
       --ha-card-background: rgba(255, 255, 255, 0.9);
       --ha-card-box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     }
+```
 
-Contributing
+## Contributing
+
 Contributions are welcome! Follow these steps:
 
-Fork the repository:git clone https://github.com/yourusername/lovelace-light-control-card.git
-cd lovelace-light-control-card
+1. Fork the repository:
 
+   ```bash
+   git clone https://github.com/yourusername/lovelace-light-control-card.git
+   cd lovelace-light-control-card
+   ```
 
-Create a feature branch:git checkout -b feature/your-feature
+2. Create a feature branch:
 
+   ```bash
+   git checkout -b feature/your-feature
+   ```
 
-Make changes and test locally (place light-control-card.js in <config>/www/ and add as a resource).
-Commit changes:git commit -m "Add your feature description"
+3. Make changes and test locally (place `light-control-card.js` in `<config>/www/` and add as a resource).
+4. Commit changes:
 
+   ```bash
+   git commit -m "Add your feature description"
+   ```
 
-Push to your fork:git push origin feature/your-feature
+5. Push to your fork:
 
+   ```bash
+   git push origin feature/your-feature
+   ```
 
-Open a pull request on GitHub.
+6. Open a pull request on GitHub.
 
-Development
+## Development
 
-Dependencies: Uses Lit for reactive UI. Install via npm for development:npm install
+- **Dependencies**: Uses [Lit](https://lit.dev/) for reactive UI. Install via npm for development:
 
+  ```bash
+  npm install
+  ```
 
-Testing: Place light-control-card.js in <config>/www/ and add as a resource (/local/light-control-card.js).
-Building: No build step required; the card is a single JavaScript file.
+- **Testing**: Place `light-control-card.js` in `<config>/www/` and add as a resource (`/local/light-control-card.js`).
+- **Building**: No build step required; the card is a single JavaScript file.
 
-Troubleshooting
+## Troubleshooting
 
-Card not appearing? Ensure the resource URL is correct and the file is in /hacsfiles/ or /local/.
-LIFX effects missing? Verify the light entity has effect_list in its attributes.
-Errors? Check the browser console and Home Assistant logs.
+- **Card not appearing?** Verify the resource URL and ensure the file is in `/hacsfiles/` or `/local/`.
+- **LIFX effects missing?** Check if the light entity has `effect_list` in its attributes.
+- **Errors?** Inspect the browser console and Home Assistant logs.
 
-License
-MIT License
+## License
+
+[MIT License](LICENSE)
