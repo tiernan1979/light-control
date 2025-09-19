@@ -93,6 +93,7 @@ class LightControlCard extends LitElement {
                 <div class="light-list">
                   ${group.lights.map(light => {
                     const lightState = this.hass.states[light.entity];
+                    const isLifx = lightState && lightState.attributes.effect_list && lightState.attributes.effect_list.length > 0;
                     return lightState ? html`
                       <div class="light-item">
                         <span>${light.name || this._friendlyName(light.entity)}</span>
@@ -115,8 +116,20 @@ class LightControlCard extends LitElement {
                             @dblclick=${() => this._openColorPicker(light.entity, lightState.attributes.rgb_color || [255, 255, 255])}
                           ></div>
                         ` : ''}
+                        ${isLifx && lightState.state === 'on' ? html`
+                          <div class="effects-container">
+                            ${lightState.attributes.effect_list.map(effect => html`
+                              <button
+                                class="effect-button ${lightState.attributes.effect === effect ? 'active' : ''}"
+                                @click=${() => this._setEffect(light.entity, effect)}
+                              >
+                                ${effect}
+                              </button>
+                            `)}
+                          </div>
+                        ` : ''}
                       </div>
-                    ` : ''})
+                    ` : ''}
                   })}
                 </div>
               ` : ''}
@@ -142,6 +155,10 @@ class LightControlCard extends LitElement {
     } else {
       this.hass.callService('light', 'turn_off', { entity_id: entity });
     }
+  }
+
+  _setEffect(entity, effect) {
+    this.hass.callService('light', 'turn_on', { entity_id: entity, effect });
   }
 
   _openColorPicker(entity, rgbColor) {
@@ -219,7 +236,7 @@ class LightControlCard extends LitElement {
       }
       .light-item {
         display: flex;
-        align-items: center;
+        flex-direction: column;
         gap: 8px;
         padding: 8px 0;
         border-top: 1px solid var(--divider-color);
@@ -262,6 +279,28 @@ class LightControlCard extends LitElement {
         border-radius: 50%;
         border: 2px solid var(--divider-color);
         cursor: pointer;
+      }
+      .effects-container {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 4px;
+        justify-content: center;
+      }
+      .effect-button {
+        padding: 4px 8px;
+        background-color: var(--secondary-background-color, #f0f0f0);
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 12px;
+        transition: background-color 0.2s;
+      }
+      .effect-button:hover {
+        background-color: var(--accent-color);
+      }
+      .effect-button.active {
+        background-color: var(--primary-color);
+        color: white;
       }
     `;
   }
