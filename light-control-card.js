@@ -107,7 +107,11 @@ class LightControlCard extends LitElement {
                           <div
                             class="color-indicator"
                             style="background-color: ${this._rgbColor(lightState.attributes.rgb_color)}"
-                            @dblclick=${() => this._openColorPicker(light.entity, lightState.attributes.rgb_color || [255, 255, 255])}
+                            @dblclick=${() => {
+                              const color = lightState.attributes.rgb_color || [255, 255, 255];
+                              this._openColorPicker(light.entity, color);
+                            }}
+
                           ></div>
                         ` : ''}
                       </div>
