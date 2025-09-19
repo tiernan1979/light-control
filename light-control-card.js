@@ -35,7 +35,8 @@ class LightControlCard extends LitElement {
             ${this.config.scenes.map(scene => html`
               <button
                 class="scene-button"
-                @click=${() => this._activateScene(scene.entity)}>
+                @click=${() => this._activateScene(scene.entity)}
+              >
                 ${scene.icon ? html`<ha-icon icon="${scene.icon}"></ha-icon>` : ''}
                 ${scene.name || scene.entity.split('.')[1].replace(/_/g, ' ')}
               </button>
@@ -61,17 +62,18 @@ class LightControlCard extends LitElement {
                       class="custom-slider"
                       .value=${groupState.state === 'on' ? Math.round((groupState.attributes.brightness || 0) / 2.55) : 0}
                       @click=${() => this._toggleSlider(group.group_entity, groupState.state)}
-                      @input=${ev => this._setBrightness(group.group_entity, ev.target.value)}
+                      @input=${(ev) => this._setBrightness(group.group_entity, ev.target.value)}
                       min="0"
                       max="100"
-                      step="1">
+                      step="1"
+                    >
                   </div>
                   ${groupState.attributes.supported_color_modes?.includes('rgb') ? html`
                     <div
                       class="color-indicator"
-                      style="background-color: ${groupState.attributes.rgb_color ? `rgb(${groupState.attributes.rgb_color.join(',')})` : '#ffffff'}"
-                      @dblclick=${() => this._openColorPicker(group.group_entity, groupState.attributes.rgb_color)}>
-                    </div>
+                      style=${`background-color: ${groupState.attributes.rgb_color ? `rgb(${groupState.attributes.rgb_color.join(',')})` : '#ffffff'}`}
+                      @dblclick=${() => this._openColorPicker(group.group_entity, groupState.attributes.rgb_color || [255, 255, 255])}
+                    ></div>
                   ` : ''}
                 </div>
               ` : ''}
@@ -88,17 +90,18 @@ class LightControlCard extends LitElement {
                             class="custom-slider"
                             .value=${lightState.state === 'on' ? Math.round((lightState.attributes.brightness || 0) / 2.55) : 0}
                             @click=${() => this._toggleSlider(light.entity, lightState.state)}
-                            @input=${ev => this._setBrightness(light.entity, ev.target.value)}
+                            @input=${(ev) => this._setBrightness(light.entity, ev.target.value)}
                             min="0"
                             max="100"
-                            step="1">
+                            step="1"
+                          >
                         </div>
                         ${lightState.attributes.supported_color_modes?.includes('rgb') ? html`
                           <div
                             class="color-indicator"
-                            style="background-color: ${lightState.attributes.rgb_color ? `rgb(${lightState.attributes.rgb_color.join(',')})` : '#ffffff'}"
-                            @dblclick=${() => this._openColorPicker(light.entity, lightState.attributes.rgb_color)}>
-                          </div>
+                            style=${`background-color: ${lightState.attributes.rgb_color ? `rgb(${lightState.attributes.rgb_color.join(',')})` : '#ffffff'}`}
+                            @dblclick=${() => this._openColorPicker(light.entity, lightState.attributes.rgb_color || [255, 255, 255])}
+                          ></div>
                         ` : ''}
                       </div>
                     ` : ''}
@@ -136,11 +139,11 @@ class LightControlCard extends LitElement {
       detail: { entityId: entity },
     });
     this.dispatchEvent(event);
-    // Trigger Home Assistant's color picker popup
+    // Ensure color picker is visible in more-info dialog
     setTimeout(() => {
-      const moreInfo = document.querySelector('home-assistant').shadowRoot.querySelector('ha-more-info-dialog');
+      const moreInfo = document.querySelector('home-assistant')?.shadowRoot?.querySelector('ha-more-info-dialog');
       if (moreInfo) {
-        moreInfo.shadowRoot.querySelector('ha-dialog').scrollTop = 0; // Ensure color picker is visible
+        moreInfo.shadowRoot.querySelector('ha-dialog').scrollTop = 0;
       }
     }, 100);
   }
