@@ -111,7 +111,7 @@ class LightControlCard extends LitElement {
                           ></div>
                         ` : ''}
                       </div>
-                    ` : '' }
+                    ` : ''}
                   })}
                 </div>
               ` : ''}
@@ -122,18 +122,22 @@ class LightControlCard extends LitElement {
     `;
   }
 
+  // Helper: Extract name from entity
   _friendlyName(entityId) {
     return entityId?.split('.')[1]?.replace(/_/g, ' ') || entityId;
   }
 
+  // Helper: Convert brightness 0-255 to percentage
   _brightnessValue(state) {
     return state.state === 'on' ? Math.round((state.attributes.brightness || 0) / 2.55) : 0;
   }
 
+  // Helper: Convert [r,g,b] to rgb() string
   _rgbColor(rgb) {
-    return rgb ? `rgb(${rgb.join(',')})` : '#ffffff';
+    return rgb && Array.isArray(rgb) ? `rgb(${rgb.join(',')})` : '#ffffff';
   }
 
+  // Toggle expand/collapse group
   _toggleGroup(index) {
     this.expandedGroups = {
       ...this.expandedGroups,
@@ -142,12 +146,14 @@ class LightControlCard extends LitElement {
     this.requestUpdate();
   }
 
+  // Toggle light on/off
   _toggleSlider(entity, state) {
     this.hass.callService('light', state === 'on' ? 'turn_off' : 'turn_on', {
       entity_id: entity,
     });
   }
 
+  // Set brightness or turn off
   _setBrightness(entity, value) {
     if (value > 0) {
       this.hass.callService('light', 'turn_on', {
@@ -161,6 +167,7 @@ class LightControlCard extends LitElement {
     }
   }
 
+  // Open Home Assistant more-info dialog for color control
   _openColorPicker(entity, rgbColor) {
     this.dispatchEvent(new CustomEvent('hass-more-info', {
       bubbles: true,
@@ -168,6 +175,7 @@ class LightControlCard extends LitElement {
       detail: { entityId: entity },
     }));
 
+    // Scroll to top (ensures color picker is visible)
     setTimeout(() => {
       const moreInfo = document.querySelector('home-assistant')?.shadowRoot?.querySelector('ha-more-info-dialog');
       if (moreInfo) {
@@ -177,6 +185,7 @@ class LightControlCard extends LitElement {
     }, 100);
   }
 
+  // Activate a scene
   _activateScene(entity) {
     this.hass.callService('scene', 'turn_on', {
       entity_id: entity,
