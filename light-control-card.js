@@ -6,12 +6,14 @@ class LightControlCard extends LitElement {
       hass: { type: Object },
       config: { type: Object },
       expandedGroups: { type: Object },
+      expandedEffects: { type: Object },
     };
   }
 
   constructor() {
     super();
     this.expandedGroups = {};
+    this.expandedEffects = {};
   }
 
   setConfig(config) {
@@ -37,6 +39,11 @@ class LightControlCard extends LitElement {
 
   _rgbColor(rgb) {
     return rgb ? `rgb(${rgb.join(',')})` : '#ffffff';
+  }
+
+  _toggleEffects(entity) {
+    this.expandedEffects = { ...this.expandedEffects, [entity]: !this.expandedEffects[entity] };
+    this.requestUpdate();
   }
 
   render() {
@@ -94,30 +101,41 @@ class LightControlCard extends LitElement {
                   ${group.lights.map(light => {
                     const lightState = this.hass.states[light.entity];
                     const isLifx = lightState && lightState.attributes.effect_list && lightState.attributes.effect_list.length > 0;
+                    const isEffectsExpanded = this.expandedEffects[light.entity] || false;
                     return lightState ? html`
                       <div class="light-item">
-                        <span>${light.name || this._friendlyName(light.entity)}</span>
-                        <div class="slider-container">
-                          <input
-                            type="range"
-                            class="custom-slider"
-                            .value=${this._brightnessValue(lightState)}
-                            @click=${() => this._toggleSlider(light.entity, lightState.state)}
-                            @input=${(ev) => this._setBrightness(light.entity, ev.target.value)}
-                            min="0"
-                            max="100"
-                            step="1"
-                          >
+                        <div class="light-controls">
+                          <span>${light.name || this._friendlyName(light.entity)}</span>
+                          <div class="slider-container">
+                            <input
+                              type="range"
+                              class="custom-slider"
+                              .value=${this._brightnessValue(lightState)}
+                              @click=${() => this._toggleSlider(light.entity, lightState.state)}
+                              @input=${(ev) => this._setBrightness(light.entity, ev.target.value)}
+                              min="0"
+                              max="100"
+                              step="1"
+                            >
+                          </div>
+                          ${lightState.attributes.supported_color_modes?.includes('rgb') ? html`
+                            <div
+                              class="color-indicator"
+                              style=${`background-color: ${this._rgbColor(lightState.attributes.rgb_color)}`}
+                              @dblclick=${() => this._openColorPicker(light.entity, lightState.attributes.rgb_color || [255, 255, 255])}
+                            ></div>
+                          ` : ''}
+                          ${isLifx && lightState.state === 'on' ? html`
+                            <button
+                              class="effects-toggle"
+                              @click=${() => this._toggleEffects(light.entity)}
+                            >
+                              <ha-icon icon=${isEffectsExpanded ? 'mdi:chevron-up' : 'mdi:chevron-down'}></ha-icon>
+                            </button>
+                          ` : ''}
                         </div>
-                        ${lightState.attributes.supported_color_modes?.includes('rgb') ? html`
-                          <div
-                            class="color-indicator"
-                            style=${`background-color: ${this._rgbColor(lightState.attributes.rgb_color)}`}
-                            @dblclick=${() => this._openColorPicker(light.entity, lightState.attributes.rgb_color || [255, 255, 255])}
-                          ></div>
-                        ` : ''}
-                        ${isLifx && lightState.state === 'on' ? html`
-                          <div class="effects-container">
+                        ${isLifx && lightState.state === 'on' && isEffectsExpanded ? html`
+                          <div class="effects-panel">
                             ${lightState.attributes.effect_list.map(effect => html`
                               <button
                                 class="effect-button ${lightState.attributes.effect === effect ? 'active' : ''}"
@@ -241,6 +259,11 @@ class LightControlCard extends LitElement {
         padding: 8px 0;
         border-top: 1px solid var(--divider-color);
       }
+      .light-controls {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
       .slider-container {
         flex: 1;
         position: relative;
@@ -280,19 +303,37 @@ class LightControlCard extends LitElement {
         border: 2px solid var(--divider-color);
         cursor: pointer;
       }
-      .effects-container {
+      .effects-toggle {
+        padding: 4px;
+        background: none;
+        border: none;
+        cursor: pointer;
+      }
+      .effects-panel {
         display: flex;
-        flex-wrap: wrap;
-        gap: 4px;
-        justify-content: center;
+        overflow-x: auto;
+        gap: 8px;
+        padding: 8px 0;
+        transition: max-height 0.3s ease-in-out;
+        max-height: 200px;
+        scrollbar-width: thin;
+        scrollbar-color: var(--primary-color) transparent;
+      }
+      .effects-panel::-webkit-scrollbar {
+        height: 4px;
+      }
+      .effects-panel::-webkit-scrollbar-thumb {
+        background: var(--primary-color);
+        border-radius: 4px;
       }
       .effect-button {
-        padding: 4px 8px;
+        padding: 4px 12px;
         background-color: var(--secondary-background-color, #f0f0f0);
         border: none;
-        border-radius: 4px;
+        border-radius: 12px;
         cursor: pointer;
         font-size: 12px;
+        white-space: nowrap;
         transition: background-color 0.2s;
       }
       .effect-button:hover {
